@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="KAISAR — Aplikasi edukasi bahasa isyarat SIBI anak berbasis WebAR">
+  <title>KAISAR (Kartu Animasi Isyarat SIBI Augmented Reality)</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+
+  <link rel="shortcut icon" type="image/x-icon" href="assets/favicon.ico">
+
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+
+  <link rel="manifest" href="assets/site.webmanifest">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/aframe@1.4.2/dist/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/aframe-extras@6.1.1/dist/aframe-extras.min.js"></script>
+</head>
+<body>
+
+  <div id="loading-screen" class="loading-screen" aria-live="polite">
+    <div class="loading-screen__card">
+      <div class="loading-screen__spinner" aria-hidden="true"></div>
+      <p id="loading-status" class="loading-screen__text">Memuat aplikasi…</p>
+    </div>
+  </div>
+
+  <div id="welcome-screen" class="welcome-modal">
+    <div class="welcome-modal__card">
+      <div class="welcome-modal__header">
+        <span style="color: #1E3A8A;">K</span><span style="color: #14B8A6;">A</span><span style="color: #FBBF24;">I</span><span style="color: #FB7185;">S</span><span style="color: #A78BFA;">A</span><span style="color: #1E3A8A;">R</span>
+      </div>
+      <p class="welcome-modal__sub">Kartu Animasi Isyarat SIBI Augmented Reality</p>
+      
+      <div class="welcome-modal__body">
+        <p>👋 Halo Teman-Teman! Selamat datang di media belajar isyarat SIBI interaktif.</p>
+        <div class="welcome-modal__tips">
+          <strong>💡 Cara Bermain:</strong>
+          <ul>
+            <li>Ambil kartu flashcard KAISAR kamu.</li>
+            <li>Arahkan kamera ke <strong>Sisi Belakang (Markah)</strong> untuk memunculkan animasi 3D.</li>
+            <li>Gunakan sisi depan kartu untuk menebak gerakan isyarat yang tepat!</li>
+          </ul>
+        </div>
+      </div>
+      
+      <button id="btn-start-app" class="welcome-modal__btn" type="button">
+        Mulai Belajar! 🚀
+      </button>
+    </div>
+  </div>
+  
+  <div id="ui-overlay">
+
+    <header class="app-header">
+      <img src="assets/logo_kaisar.png" alt="Logo KAISAR" class="app-header__logo">
+
+      <h1 class="app-header__title">
+        <span style="color: #1E3A8A;">K</span><span style="color: #14B8A6;">A</span><span style="color: #FBBF24;">I</span><span style="color: #FB7185;">S</span><span style="color: #A78BFA;">A</span><span style="color: #1E3A8A;">R</span>
+      </h1>
+
+      <button 
+        id="btn-immersive" 
+        class="immersive-btn" 
+        type="button" 
+        aria-label="Mode Fokus"
+      >
+        <span id="immersive-icon" class="immersive-btn__icon" aria-hidden="true">⛶</span>
+      </button>
+    </header>
+
+    <div id="status-badge" class="status-badge">🔍 Menunggu Kartu...</div>
+
+    <div id="scanning-overlay" class="scanning-overlay" aria-hidden="false">
+      <span class="scanning-overlay__label">Arahkan ke Markah</span>
+    </div>
+
+    <p id="instruction-text" class="instruction-text is-hidden">
+      Geser layar untuk PUTAR &bull; Cubit untuk ZOOM
+    </p>
+
+    <footer class="footer-controls">
+      <button
+        id="btn-info"
+        class="control-btn control-btn--info"
+        type="button"
+        aria-label="Tampilkan petunjuk belajar"
+      >
+        <span class="control-btn__icon" aria-hidden="true">ⓘ</span>
+      </button>
+      
+      <button
+        id="btn-pause-play"
+        class="control-btn control-btn--pause"
+        type="button"
+        aria-label="Jeda atau putar animasi"
+      >
+        <span id="pause-play-icon" class="control-btn__icon" aria-hidden="true">⏸</span>
+      </button>
+
+      <button
+        id="btn-reset"
+        class="control-btn control-btn--reset"
+        type="button"
+        aria-label="Reset posisi dan animasi model"
+      >
+        <span class="control-btn__icon" aria-hidden="true">↺</span>
+      </button>
+
+      <button
+        id="btn-mute"
+        class="control-btn control-btn--mute"
+        type="button"
+        aria-label="Matikan Suara"
+      >
+        <span id="mute-icon" class="control-btn__icon" aria-hidden="true">🔊</span>
+      </button>
+
+      <button
+        id="btn-speed"
+        class="control-btn control-btn--speed"
+        type="button"
+        aria-label="Ubah Kecepatan Animasi"
+      >
+        <span id="speed-text" style="font-size: 0.9rem; font-weight: 800;">1.0x</span>
+      </button>
+    </footer>
+
+  </div>
+
+  <div id="ar-container" class="ar-container">
+  <a-scene
+    mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; maxTrack: 1; filterMinCF: 0.001; filterBeta: 0.005; warmupTolerance: 5; missTolerance: 3; uiLoading: no; uiScanning: no; uiError: no;"
+    color-space="sRGB"
+    renderer="alpha: true; colorManagement: true; physicallyCorrectLights: true"
+    background="color: #000000; transparent: true"
+    vr-mode-ui="enabled: false"
+    device-orientation-permission-ui="enabled: false"
+    embedded
+  >
+    <a-assets timeout="120000">
+      <a-asset-item id="modelTanganA" src="assets/isyarat_huruf.glb"></a-asset-item>
+      <a-asset-item id="modelTanganB" src="assets/isyarat_huruf.glb"></a-asset-item>
+      <a-asset-item id="modelBody" src="assets/isyarat_kata.glb"></a-asset-item>
+    </a-assets>
+
+    <a-entity light="type: ambient; color: #ffffff; intensity: 1.2"></a-entity>
+    <a-entity light="type: directional; color: #ffffff; intensity: 0.9" position="0 1 1"></a-entity>
+
+    <a-camera
+      position="0 0 0"
+      look-controls="enabled: false"
+      cursor="fuse: false; rayOrigin: mouse"
+    ></a-camera>
+
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity
+        class="interactable"
+        data-model-type="tangan"
+        data-clip="Animasi_A"
+        gltf-model="#modelTanganA"
+        visible="false"
+      ></a-entity>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 1">
+      <a-entity
+        class="interactable"
+        data-model-type="tangan"
+        data-clip="Animasi_B"
+        gltf-model="#modelTanganB"
+        visible="false"
+      ></a-entity>
+    </a-entity>
+
+    <a-entity mindar-image-target="targetIndex: 2">
+      <a-entity
+        class="interactable"
+        data-model-type="body"
+        data-clip="Animasi_Tidur"
+        gltf-model="#modelBody"
+        visible="false"
+      ></a-entity>
+    </a-entity>
+
+  </a-scene>
+
+  </div>
+
+  <script src="app.js?v=8"></script>
+
+</body>
+</html>
