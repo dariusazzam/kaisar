@@ -760,11 +760,11 @@
       const modelType = activeModel.dataset.modelType;
 
       if (modelType === "tangan") {
-        const newX = rotation.x - deltaX * ROTATION_SENSITIVITY;
-        activeModel.setAttribute("rotation", { x: newX, y: rotation.y, z: rotation.z });
+        const newZ = rotation.z - deltaX * ROTATION_SENSITIVITY;
+        activeModel.setAttribute("rotation", { x: rotation.x, y: rotation.y, z: newZ });
       } else {
-        const newY = rotation.y - deltaX * ROTATION_SENSITIVITY;
-        activeModel.setAttribute("rotation", { x: rotation.x, y: newY, z: rotation.z });
+        const newZ = rotation.z - deltaX * ROTATION_SENSITIVITY;
+        activeModel.setAttribute("rotation", { x: rotation.x, y: rotation.y, z: newZ });
       }
       return;
     }
