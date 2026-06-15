@@ -14,9 +14,6 @@
 (function () {
   "use strict";
 
-  /* ----------------------------------------------------------
-     Konstanta & state global
-     ---------------------------------------------------------- */
   const NATIVE_MAX_DIM = {
     tangan: 0.513,
     body: 1.893,
@@ -50,10 +47,8 @@
   const modelBasePositions = new Map();
   const modelBaseRotations = new Map();
 
-  /** @type {HTMLElement|null} */
   let activeModel = null;
 
-  /** @type {Set<HTMLElement>} */
   const foundTargets = new Set();
 
   let isPlaying = true;
@@ -94,9 +89,6 @@
     anchors: [],
   };
 
-  /* ----------------------------------------------------------
-     Inisialisasi
-     ---------------------------------------------------------- */
   function init() {
     cacheElements();
     setupLoadingFlow();
@@ -133,10 +125,6 @@
     els.immersiveIcon = document.getElementById("immersive-icon");
     els.anchors = Array.from(document.querySelectorAll("[mindar-image-target]"));
   }
-
-  /* ----------------------------------------------------------
-     Loading
-     ---------------------------------------------------------- */
 
   function setLoadingStatus(message) {
     if (els.loadingStatus) {
@@ -247,9 +235,6 @@
     }, 15000);
   }
 
-  /* ----------------------------------------------------------
-     Auto-fit skala
-     ---------------------------------------------------------- */
   function setupAutoScale() {
     document.querySelectorAll(".interactable").forEach((modelEl) => {
       if (modelEl.hasAttribute("data-autofit-ready")) return;
@@ -442,9 +427,6 @@
     return { min: base * PINCH_MIN_RATIO, max: base * PINCH_MAX_RATIO };
   }
 
-  /* ----------------------------------------------------------
-     UI
-     ---------------------------------------------------------- */
   function showScanningUI() {
     els.scanningOverlay?.classList.remove("is-hidden");
     els.instructionText?.classList.add("is-hidden");
@@ -457,9 +439,6 @@
     els.scanningOverlay?.setAttribute("aria-hidden", "true");
   }
 
-  /* ----------------------------------------------------------
-     MindAR
-     ---------------------------------------------------------- */
   function setupTargetListeners() {
     els.anchors.forEach((anchor, index) => {
       anchor.addEventListener("targetFound", () => onTargetFound(anchor, index));
@@ -553,9 +532,6 @@
     }
   }
 
-  /* ----------------------------------------------------------
-     Kontrol tombol
-     ---------------------------------------------------------- */
   function setupControlButtons() {
     if (!els.btnImmersive) {
       els.btnImmersive = document.getElementById("btn-immersive");
@@ -607,7 +583,7 @@
         currentSpeed = 0.5;
       } else if (currentSpeed === 0.5) {
         currentSpeed = 0.25;
-      } else if (currentSpeed === 0.25) {
+          } else if (currentSpeed === 0.25) {
         currentSpeed = 1.5;
       } else if (currentSpeed === 1.5) {
         currentSpeed = 2.0;
@@ -750,9 +726,6 @@
     });
   }
 
-  /* ----------------------------------------------------------
-     Gesture sentuh
-     ---------------------------------------------------------- */
   function setupTouchGestures() {
     document.addEventListener("touchstart", onTouchStart, { passive: false });
     document.addEventListener("touchmove", onTouchMove, { passive: false });
@@ -784,9 +757,15 @@
       lastTouchX = touches[0].clientX;
 
       const rotation = activeModel.getAttribute("rotation");
-      const newY = rotation.y - deltaX * ROTATION_SENSITIVITY;
+      const modelType = activeModel.dataset.modelType;
 
-      activeModel.setAttribute("rotation", { x: rotation.x, y: newY, z: rotation.z });
+      if (modelType === "tangan") {
+        const newX = rotation.x - deltaX * ROTATION_SENSITIVITY;
+        activeModel.setAttribute("rotation", { x: newX, y: rotation.y, z: rotation.z });
+      } else {
+        const newY = rotation.y - deltaX * ROTATION_SENSITIVITY;
+        activeModel.setAttribute("rotation", { x: rotation.x, y: newY, z: rotation.z });
+      }
       return;
     }
 
@@ -814,9 +793,6 @@
     }
   }
 
-  /* ----------------------------------------------------------
-     Utilitas
-     ---------------------------------------------------------- */
   function getTouchDistance(t1, t2) {
     const dx = t2.clientX - t1.clientX;
     const dy = t2.clientY - t1.clientY;
@@ -826,9 +802,6 @@
   function getCurrentScale(model) { return model.object3D.scale.x; }
   function clamp(value, min, max) { return Math.min(max, Math.max(min, value)); }
 
-  /* ----------------------------------------------------------
-     Mulai aplikasi
-     ---------------------------------------------------------- */
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", init);
   } else {
