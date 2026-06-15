@@ -372,10 +372,13 @@
     modelEl.setAttribute("scale", `${fitScale} ${fitScale} ${fitScale}`);
     modelEl.setAttribute("rotation", `${rotation.x} ${rotation.y} ${rotation.z}`);
 
+    // Geser mesh secara internal agar titik (0,0,0) entity tepat di pusat visual model (Pivot)
+    mesh.position.set(-centerX, -centerY, -centerZ);
+
     const pos = sanitizePosition({
-      x: -centerX * fitScale + preset.offset.x,
-      y: -centerY * fitScale + preset.offset.y,
-      z: preset.liftZ - centerZ * fitScale + preset.offset.z,
+      x: preset.offset.x,
+      y: preset.offset.y,
+      z: preset.liftZ + preset.offset.z,
     }, preset);
 
     modelEl.setAttribute("position", `${pos.x} ${pos.y} ${pos.z}`);
