@@ -743,10 +743,22 @@
       const deltaX = touches[0].clientX - lastTouchX;
       lastTouchX = touches[0].clientX;
 
-      const rotation = activeModel.getAttribute("rotation");
-      const newY = rotation.y - deltaX * ROTATION_SENSITIVITY;
-
-      activeModel.setAttribute("rotation", rotation.x + " " + newY + " " + rotation.z);
+      const THREE = window.THREE;
+      if (THREE) {
+        const angle = -deltaX * ROTATION_SENSITIVITY * (Math.PI / 180);
+        const axis = new THREE.Vector3(0, 1, 0);
+        const q = new THREE.Quaternion().setFromAxisAngle(axis, angle);
+        
+        activeModel.object3D.quaternion.premultiply(q);
+        
+        const euler = new THREE.Euler().setFromQuaternion(activeModel.object3D.quaternion, 'YXZ');
+        
+        activeModel.setAttribute("rotation", {
+          x: euler.x * (180 / Math.PI),
+          y: euler.y * (180 / Math.PI),
+          z: euler.z * (180 / Math.PI)
+        });
+      }
       return;
     }
 
