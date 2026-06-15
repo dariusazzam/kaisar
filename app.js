@@ -784,9 +784,9 @@
       lastTouchX = touches[0].clientX;
 
       const rotation = activeModel.getAttribute("rotation");
-      const newZ = rotation.z - deltaX * ROTATION_SENSITIVITY;
+      const newY = rotation.y - deltaX * ROTATION_SENSITIVITY;
 
-      activeModel.setAttribute("rotation", { x: rotation.x, y: rotation.y, z: newZ });
+      activeModel.setAttribute("rotation", { x: rotation.x, y: newY, z: rotation.z });
       return;
     }
 
