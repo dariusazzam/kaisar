@@ -1,16 +1,3 @@
-/**
- * KAISAR — Logika Kontrol & Gesture
- * -----------------------------------
- * - Pause/Play animasi via timeScale [animation-mixer]
- * - Reset rotasi, skala, dan ulang animasi dari frame pertama
- * - Deteksi target found/lost untuk UI overlay & Badge Status
- * - Gesture sentuh: swipe (rotasi Z) & pinch (zoom)
- * - Sistem Multisensory: Kombinasi Audio SFX + Haptic Feedback (Vibration)
- * - Fitur Aksesibilitas: Saklar Mute/Unmute khusus Audio Suara
- * - Fitur Edukasi: Pengatur Kecepatan Komplit (0.25x / 0.5x / 1.0x / 1.5x / 2.0x)
- * - Mode Immersive: Fullscreen Otomatis + Sembunyikan Seluruh UI Kontrol
- */
-
 (function () {
   "use strict";
 
@@ -583,7 +570,7 @@
         currentSpeed = 0.5;
       } else if (currentSpeed === 0.5) {
         currentSpeed = 0.25;
-          } else if (currentSpeed === 0.25) {
+      } else if (currentSpeed === 0.25) {
         currentSpeed = 1.5;
       } else if (currentSpeed === 1.5) {
         currentSpeed = 2.0;
@@ -704,9 +691,9 @@
     const basePos = getBasePosition(activeModel);
     const baseRot = getBaseRotation(activeModel);
 
-    activeModel.setAttribute("rotation", `${baseRot.x} ${baseRot.y} ${baseRot.z}`);
-    activeModel.setAttribute("position", `${basePos.x} ${basePos.y} ${basePos.z}`);
-    activeModel.setAttribute("scale", `${baseScale} ${baseScale} ${baseScale}`);
+    activeModel.setAttribute("rotation", baseRot.x + " " + baseRot.y + " " + baseRot.z);
+    activeModel.setAttribute("position", basePos.x + " " + basePos.y + " " + basePos.z);
+    activeModel.setAttribute("scale", baseScale + " " + baseScale + " " + baseScale);
 
     restartAnimation(activeModel);
     applyTimeScale(activeModel, isPlaying ? currentSpeed : 0);
@@ -757,15 +744,9 @@
       lastTouchX = touches[0].clientX;
 
       const rotation = activeModel.getAttribute("rotation");
-      const modelType = activeModel.dataset.modelType;
+      const newY = rotation.y - deltaX * ROTATION_SENSITIVITY;
 
-      if (modelType === "tangan") {
-        const newZ = rotation.z - deltaX * ROTATION_SENSITIVITY;
-        activeModel.setAttribute("rotation", { x: rotation.x, y: rotation.y, z: newZ });
-      } else {
-        const newZ = rotation.z - deltaX * ROTATION_SENSITIVITY;
-        activeModel.setAttribute("rotation", { x: rotation.x, y: rotation.y, z: newZ });
-      }
+      activeModel.setAttribute("rotation", rotation.x + " " + newY + " " + rotation.z);
       return;
     }
 
@@ -776,7 +757,7 @@
       const limits = getScaleLimits(activeModel);
       const newScale = clamp(pinchStartScale * ratio, limits.min, limits.max);
 
-      activeModel.setAttribute("scale", `${newScale} ${newScale} ${newScale}`);
+      activeModel.setAttribute("scale", newScale + " " + newScale + " " + newScale);
     }
   }
 
