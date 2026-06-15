@@ -745,18 +745,36 @@
 
       const THREE = window.THREE;
       if (THREE) {
+        // ─────────────────────────────────────────────────────────────
+        // FIX: Rotasi pada sumbu Z *lokal* model (vertikal visual)
+        //
+        // Masalah sebelumnya: axis Y-dunia (0,1,0) dipakai untuk semua
+        // model. Karena tangan di-preset dengan rotation.x = -90 dan
+        // body dengan rotation.x = 90, sumbu "atas" visual mereka bukan
+        // lagi Y-dunia — sehingga rotasi terasa miring seperti jarum jam.
+        //
+        // Solusi: ambil sumbu Z lokal object3D (kolom ke-3 matrixWorld),
+        // lalu normalisasi. Sumbu Z lokal selalu menunjuk ke arah "keluar"
+        // dari permukaan model (vertikal visual), sehingga rotasi terasa
+        // persis seperti bumi berputar pada porosnya.
+        // ─────────────────────────────────────────────────────────────
         const angle = -deltaX * ROTATION_SENSITIVITY * (Math.PI / 180);
-        const axis = new THREE.Vector3(0, 1, 0);
-        const q = new THREE.Quaternion().setFromAxisAngle(axis, angle);
-        
+
+        // Ambil sumbu Z lokal model dari matrixWorld (kolom ke-3: indeks 8,9,10)
+        activeModel.object3D.updateMatrixWorld(true);
+        const m = activeModel.object3D.matrixWorld.elements;
+        const localZ = new THREE.Vector3(m[8], m[9], m[10]).normalize();
+
+        const q = new THREE.Quaternion().setFromAxisAngle(localZ, angle);
         activeModel.object3D.quaternion.premultiply(q);
-        
-        const euler = new THREE.Euler().setFromQuaternion(activeModel.object3D.quaternion, 'YXZ');
-        
+
+        const euler = new THREE.Euler().setFromQuaternion(
+          activeModel.object3D.quaternion, 'YXZ'
+        );
         activeModel.setAttribute("rotation", {
           x: euler.x * (180 / Math.PI),
           y: euler.y * (180 / Math.PI),
-          z: euler.z * (180 / Math.PI)
+          z: euler.z * (180 / Math.PI),
         });
       }
       return;
