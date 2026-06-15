@@ -33,6 +33,7 @@
   const modelBaseScales = new Map();
   const modelBasePositions = new Map();
   const modelBaseRotations = new Map();
+  const modelSpinAngles = new Map();
 
   let activeModel = null;
 
@@ -383,6 +384,7 @@
     modelBaseRotations.set(modelEl, { ...rotation });
     modelBaseScales.set(modelEl, fitScale);
     modelBasePositions.set(modelEl, { ...pos });
+    modelSpinAngles.set(modelEl, 0);
 
     const clip = modelEl.dataset.clip ?? "model";
     console.info(
@@ -404,11 +406,13 @@
     modelBaseRotations.set(modelEl, { ...rotation });
     modelBaseScales.set(modelEl, preset.fallbackScale);
     modelBasePositions.set(modelEl, { ...pos });
+    modelSpinAngles.set(modelEl, 0);
   }
 
   function getBaseScale(model) { return modelBaseScales.get(model) ?? getModelPreset(model).fallbackScale; }
   function getBaseRotation(model) { return modelBaseRotations.get(model) ?? getModelRotation(model); }
   function getBasePosition(model) { return modelBasePositions.get(model) ?? { x: 0, y: 0, z: 0 }; }
+  function getSpinAngle(model) { return modelSpinAngles.get(model) ?? 0; }
   function getScaleLimits(model) {
     const base = getBaseScale(model);
     return { min: base * PINCH_MIN_RATIO, max: base * PINCH_MAX_RATIO };
@@ -687,6 +691,9 @@
   function resetActiveModel() {
     if (!activeModel) return;
 
+    // Reset akumulasi spin terlebih dahulu
+    modelSpinAngles.set(activeModel, 0);
+
     const baseScale = getBaseScale(activeModel);
     const basePos = getBasePosition(activeModel);
     const baseRot = getBaseRotation(activeModel);
@@ -743,14 +750,17 @@
       const deltaX = touches[0].clientX - lastTouchX;
       lastTouchX = touches[0].clientX;
 
-      const newSpin = prevSpin + deltaX * ROTATION_SENSITIVITY;
+      const prevSpin = getSpinAngle(activeModel);
+      const newSpin  = prevSpin + deltaX * ROTATION_SENSITIVITY;
       modelSpinAngles.set(activeModel, newSpin);
 
+      const baseRot = getBaseRotation(activeModel);
       activeModel.setAttribute("rotation", {
         x: baseRot.x,
-        y: baseRot.y + newSpin,   // ← ini saja
+        y: baseRot.y + newSpin,
         z: baseRot.z,
       });
+      return;
     }
 
     if (touches.length === 2 && initialPinchDistance > 0) {
