@@ -372,7 +372,6 @@
     modelEl.setAttribute("scale", `${fitScale} ${fitScale} ${fitScale}`);
     modelEl.setAttribute("rotation", `${rotation.x} ${rotation.y} ${rotation.z}`);
 
-    // Geser mesh secara internal agar titik (0,0,0) entity tepat di pusat visual model (Pivot)
     mesh.position.set(-centerX, -centerY, -centerZ);
 
     const pos = sanitizePosition({
@@ -435,8 +434,8 @@
 
   function setupTargetListeners() {
     els.anchors.forEach((anchor, index) => {
-      anchor.addEventListener("targetFound", () => onTargetFound(anchor, index));
-      anchor.addEventListener("targetLost", () => onTargetLost(anchor, index));
+      anchor.addEventListener("targetFound", (event) => onTargetFound(anchor, event.detail.targetIndex));
+      anchor.addEventListener("targetLost", (event) => onTargetLost(anchor, event.detail.targetIndex));
     });
   }
 
@@ -476,6 +475,7 @@
     foundTargets.clear();
     foundTargets.add(anchor);
     activeAnchorIndex = index;
+    activeModel = anchor.querySelector(".interactable");
 
     setModelVisible(anchor, true);
     activeModel = anchor.querySelector(".interactable");
@@ -483,16 +483,19 @@
 
     if (activeModel) {
       const scale = activeModel.getAttribute("scale");
+      restartAnimation(activeModel);
+      
       console.info(
-        `[KAISAR] Markah index=${index} → clip: ${activeModel.dataset.clip}, ` +
+        `[KAISAR] Markah ditemukan (Index: ${index}) → clip: ${activeModel.dataset.clip}, ` +
           `tipe: ${activeModel.dataset.modelType}, skala: ${scale.x?.toFixed?.(2) ?? scale}`
       );
     }
 
     const badge = document.getElementById("status-badge");
     if (badge) {
-      let label = index === 2 ? "Kosakata: Tidur" : `Huruf: ${index === 0 ? 'A' : 'B'}`;
-      badge.textContent = `✅ Terdeteksi — ${label}`;
+      const isTidur = (index === 2); 
+      const label = isTidur ? "Kosakata: Tidur" : `Huruf: ${index === 0 ? 'A' : (index === 1 ? 'B' : 'Lainnya')}`;
+      badge.textContent = `✅ ${label}`;
       badge.classList.add("status-badge--active");
     }
   }
