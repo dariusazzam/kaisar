@@ -434,8 +434,8 @@
 
   function setupTargetListeners() {
     els.anchors.forEach((anchor, index) => {
-      anchor.addEventListener("targetFound", (event) => onTargetFound(anchor, event.detail.targetIndex));
-      anchor.addEventListener("targetLost", (event) => onTargetLost(anchor, event.detail.targetIndex));
+      anchor.addEventListener("targetFound", () => onTargetFound(anchor, index));
+      anchor.addEventListener("targetLost", () => onTargetLost(anchor, index));
     });
   }
 
@@ -471,37 +471,27 @@
       lostDebounceTimer = null;
     }
 
-    // Reset total: Sembunyikan semua model lain sebelum menampilkan yang baru
     hideAllModels();
     foundTargets.clear();
     foundTargets.add(anchor);
     activeAnchorIndex = index;
+
+    setModelVisible(anchor, true);
     activeModel = anchor.querySelector(".interactable");
-
     hideScanningUI();
-
-    // Pastikan model di-auto-fit jika belum pernah (misal: markah ditemukan sebelum model selesai load)
-    if (activeModel && !activeModel.hasAttribute("data-autofit-ready")) {
-      autoFitModel(activeModel);
-      initAnimationMixer(activeModel); // Inisialisasi ulang mixer setelah auto-fit
-    }
 
     if (activeModel) {
       const scale = activeModel.getAttribute("scale");
-      restartAnimation(activeModel);
-      
       console.info(
-        `[KAISAR] Markah ditemukan (Index: ${index}) → clip: ${activeModel.dataset.clip}, ` +
+        `[KAISAR] Markah index=${index} → clip: ${activeModel.dataset.clip}, ` +
           `tipe: ${activeModel.dataset.modelType}, skala: ${scale.x?.toFixed?.(2) ?? scale}`
       );
-      setModelVisible(anchor, true); // Jadikan terlihat setelah dipastikan sudah di-fit
     }
 
     const badge = document.getElementById("status-badge");
     if (badge) {
-      const isTidur = (index === 2); 
-      const label = isTidur ? "Kosakata: Tidur" : `Huruf: ${index === 0 ? 'A' : (index === 1 ? 'B' : 'Lainnya')}`;
-      badge.textContent = `✅ ${label}`;
+      let label = index === 2 ? "Kosakata: Tidur" : `Huruf: ${index === 0 ? 'A' : 'B'}`;
+      badge.textContent = `✅ Terdeteksi — ${label}`;
       badge.classList.add("status-badge--active");
     }
   }
