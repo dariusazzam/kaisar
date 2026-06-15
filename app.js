@@ -36,7 +36,6 @@
   const modelSpinAngles = new Map();
 
   let activeModel = null;
-
   const foundTargets = new Set();
 
   let isPlaying = true;
@@ -330,7 +329,6 @@
 
     const mesh = modelEl.getObject3D("mesh");
     if (!mesh) {
-      console.warn("[KAISAR] Mesh belum siap, pakai skala fallback.");
       applyFallbackScale(modelEl);
       return;
     }
@@ -343,15 +341,12 @@
     let maxDim = measured;
     if (!maxDim || !Number.isFinite(maxDim) || maxDim < 0.001) {
       if (nativeMax) {
-        console.warn(`[KAISAR] Bbox kosong untuk "${modelType}", pakai native ${nativeMax}`);
         maxDim = nativeMax;
       } else {
-        console.warn("[KAISAR] Bbox tidak valid, pakai skala fallback.");
         applyFallbackScale(modelEl);
         return;
       }
     } else if (nativeMax && (measured < nativeMax * 0.25 || measured > nativeMax * 4)) {
-      console.warn(`[KAISAR] Bbox ${measured.toFixed(3)} tidak wajar untuk "${modelType}", pakai native ${nativeMax}`);
       maxDim = nativeMax;
     }
 
@@ -387,14 +382,6 @@
     modelBaseScales.set(modelEl, fitScale);
     modelBasePositions.set(modelEl, { ...pos });
     modelSpinAngles.set(modelEl, 0);
-
-    const clip = modelEl.dataset.clip ?? "model";
-    console.info(
-      `[KAISAR] Auto-fit "${clip}" (${modelType}): ` +
-        `ukuran=${maxDim.toFixed(4)} → skala=${fitScale.toFixed(2)}, ` +
-        `pos=(${pos.x.toFixed(3)}, ${pos.y.toFixed(3)}, ${pos.z.toFixed(3)}), ` +
-        `rot=(${rotation.x}, ${rotation.y}, ${rotation.z})`
-    );
   }
 
   function applyFallbackScale(modelEl) {
@@ -457,6 +444,11 @@
   }
 
   function onTargetFound(anchor, index) {
+    if (activeAnchorIndex !== -1 && activeAnchorIndex !== index) {
+      console.warn(`[KAISAR] False-Detection: Menolak markah ${index} karena markah ${activeAnchorIndex} sedang aktif.`);
+      return; 
+    }
+
     if (!isMuted) {
       sfxSuccess.currentTime = 0;
       sfxSuccess.play().catch(() => {});
@@ -480,14 +472,6 @@
     activeModel = anchor.querySelector(".interactable");
     hideScanningUI();
 
-    if (activeModel) {
-      const scale = activeModel.getAttribute("scale");
-      console.info(
-        `[KAISAR] Markah index=${index} → clip: ${activeModel.dataset.clip}, ` +
-          `tipe: ${activeModel.dataset.modelType}, skala: ${scale.x?.toFixed?.(2) ?? scale}`
-      );
-    }
-
     const badge = document.getElementById("status-badge");
     if (badge) {
       let label = index === 2 ? "Kosakata: Tidur" : `Huruf: ${index === 0 ? 'A' : 'B'}`;
@@ -497,32 +481,28 @@
   }
 
   function onTargetLost(anchor, index) {
+    if (activeAnchorIndex !== index) return;
+
     foundTargets.delete(anchor);
     setModelVisible(anchor, false);
 
-    if (activeAnchorIndex === index) {
-      activeAnchorIndex = -1;
-      activeModel = null;
-    }
-
-    console.info(`[KAISAR] Markah index=${index} hilang`);
+    console.info(`[KAISAR] Markah index=${index} terlepas dari kamera`);
 
     if (lostDebounceTimer) clearTimeout(lostDebounceTimer);
+    
     lostDebounceTimer = setTimeout(() => {
-      if (foundTargets.size === 0) {
-        hideAllModels();
-        activeModel = null;
-        activeAnchorIndex = -1;
-        showScanningUI();
+      activeAnchorIndex = -1;
+      activeModel = null;
+      hideAllModels();
+      showScanningUI();
+
+      const badge = document.getElementById("status-badge");
+      if (badge) {
+        badge.textContent = "🔍 Menunggu Kartu...";
+        badge.classList.remove("status-badge--active");
       }
       lostDebounceTimer = null;
-    }, 180);
-
-    const badge = document.getElementById("status-badge");
-    if (badge && foundTargets.size === 0) {
-      badge.textContent = "🔍 Menunggu Kartu...";
-      badge.classList.remove("status-badge--active");
-    }
+    }, 250); 
   }
 
   function setupControlButtons() {
@@ -534,7 +514,6 @@
     els.btnInfo?.addEventListener("click", () => {
       if (!isMuted) { sfxButton.currentTime = 0; sfxButton.play().catch(() => {}); }
       if (navigator.vibrate) navigator.vibrate(40);
-
       const welcomeScreen = document.getElementById("welcome-screen");
       welcomeScreen?.classList.remove("is-hidden");
     });
@@ -542,14 +521,12 @@
     els.btnPausePlay?.addEventListener("click", () => {
       if (!isMuted) { sfxButton.currentTime = 0; sfxButton.play().catch(() => {}); }
       if (navigator.vibrate) navigator.vibrate(40);
-
       togglePausePlay();
     });
 
     els.btnReset?.addEventListener("click", () => {
       if (!isMuted) { sfxButton.currentTime = 0; sfxButton.play().catch(() => {}); }
       if (navigator.vibrate) navigator.vibrate(40);
-
       resetActiveModel();
     });
 
@@ -572,20 +549,13 @@
       if (!isMuted) { sfxButton.currentTime = 0; sfxButton.play().catch(() => {}); }
       if (navigator.vibrate) navigator.vibrate(40);
 
-      if (currentSpeed === 1.0) {
-        currentSpeed = 0.5;
-      } else if (currentSpeed === 0.5) {
-        currentSpeed = 0.25;
-      } else if (currentSpeed === 0.25) {
-        currentSpeed = 1.5;
-      } else if (currentSpeed === 1.5) {
-        currentSpeed = 2.0;
-      } else {
-        currentSpeed = 1.0;
-      }
+      if (currentSpeed === 1.0) currentSpeed = 0.5;
+      else if (currentSpeed === 0.5) currentSpeed = 0.25;
+      else if (currentSpeed === 0.25) currentSpeed = 1.5;
+      else if (currentSpeed === 1.5) currentSpeed = 2.0;
+      else currentSpeed = 1.0;
 
       if (els.speedText) els.speedText.textContent = `${currentSpeed}x`;
-
       if (activeModel && isPlaying) {
         applyTimeScale(activeModel, currentSpeed);
       }
@@ -633,35 +603,19 @@
 
     if (activate) {
       if (!skipFullscreen) {
-        const req =
-          docEl.requestFullscreen?.bind(docEl) ||
-          docEl.webkitRequestFullscreen?.bind(docEl) ||
-          docEl.msRequestFullscreen?.bind(docEl);
-        if (req) {
-          req().catch((err) => {
-            console.warn("[KAISAR] Fullscreen tidak tersedia:", err.message);
-          });
-        }
+        const req = docEl.requestFullscreen?.bind(docEl) || docEl.webkitRequestFullscreen?.bind(docEl) || docEl.msRequestFullscreen?.bind(docEl);
+        if (req) req().catch(() => {});
       }
-
       uiElements.forEach((el) => el?.classList.add("ui-fade-out"));
-
       if (els.immersiveIcon) els.immersiveIcon.textContent = "⛶";
-      els.btnImmersive?.setAttribute("aria-label", "Keluar Mode Fokus");
       els.btnImmersive?.classList.add("immersive-btn--active");
     } else {
       if (!skipFullscreen && isFullscreenActive()) {
-        const exit =
-          document.exitFullscreen?.bind(document) ||
-          document.webkitExitFullscreen?.bind(document) ||
-          document.msExitFullscreen?.bind(document);
+        const exit = document.exitFullscreen?.bind(document) || document.webkitExitFullscreen?.bind(document) || document.msExitFullscreen?.bind(document);
         exit?.();
       }
-
       uiElements.forEach((el) => el?.classList.remove("ui-fade-out"));
-
       if (els.immersiveIcon) els.immersiveIcon.textContent = "⛶";
-      els.btnImmersive?.setAttribute("aria-label", "Mode Fokus");
       els.btnImmersive?.classList.remove("immersive-btn--active");
     }
   }
@@ -693,7 +647,6 @@
   function resetActiveModel() {
     if (!activeModel) return;
 
-    // Reset akumulasi spin terlebih dahulu
     modelSpinAngles.set(activeModel, 0);
 
     const baseScale = getBaseScale(activeModel);
