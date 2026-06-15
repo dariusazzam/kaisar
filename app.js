@@ -471,15 +471,20 @@
       lostDebounceTimer = null;
     }
 
+    // Reset total: Sembunyikan semua model lain sebelum menampilkan yang baru
     hideAllModels();
     foundTargets.clear();
     foundTargets.add(anchor);
     activeAnchorIndex = index;
     activeModel = anchor.querySelector(".interactable");
 
-    setModelVisible(anchor, true);
-    activeModel = anchor.querySelector(".interactable");
     hideScanningUI();
+
+    // Pastikan model di-auto-fit jika belum pernah (misal: markah ditemukan sebelum model selesai load)
+    if (activeModel && !activeModel.hasAttribute("data-autofit-ready")) {
+      autoFitModel(activeModel);
+      initAnimationMixer(activeModel); // Inisialisasi ulang mixer setelah auto-fit
+    }
 
     if (activeModel) {
       const scale = activeModel.getAttribute("scale");
@@ -489,6 +494,7 @@
         `[KAISAR] Markah ditemukan (Index: ${index}) → clip: ${activeModel.dataset.clip}, ` +
           `tipe: ${activeModel.dataset.modelType}, skala: ${scale.x?.toFixed?.(2) ?? scale}`
       );
+      setModelVisible(anchor, true); // Jadikan terlihat setelah dipastikan sudah di-fit
     }
 
     const badge = document.getElementById("status-badge");
