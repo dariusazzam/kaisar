@@ -54,6 +54,8 @@
   let isGesturing = false;
 
   let activeAnchorIndex = -1;
+  let trackingAnchorIndex = -1;
+  let foundValidationTimer = null;
   let lostDebounceTimer = null;
 
   const els = {
@@ -445,42 +447,63 @@
 
   function onTargetFound(anchor, index) {
     if (activeAnchorIndex !== -1 && activeAnchorIndex !== index) {
-      console.warn(`[KAISAR] False-Detection: Menolak markah ${index} karena markah ${activeAnchorIndex} sedang aktif.`);
       return; 
     }
 
-    if (!isMuted) {
-      sfxSuccess.currentTime = 0;
-      sfxSuccess.play().catch(() => {});
+    if (trackingAnchorIndex === index) {
+      return;
     }
 
-    if (navigator.vibrate) {
-      navigator.vibrate(150);
+    if (foundValidationTimer) {
+      clearTimeout(foundValidationTimer);
     }
 
-    if (lostDebounceTimer) {
-      clearTimeout(lostDebounceTimer);
-      lostDebounceTimer = null;
-    }
+    trackingAnchorIndex = index;
 
-    hideAllModels();
-    foundTargets.clear();
-    foundTargets.add(anchor);
-    activeAnchorIndex = index;
+    foundValidationTimer = setTimeout(() => {
+      if (lostDebounceTimer) {
+        clearTimeout(lostDebounceTimer);
+        lostDebounceTimer = null;
+      }
 
-    setModelVisible(anchor, true);
-    activeModel = anchor.querySelector(".interactable");
-    hideScanningUI();
+      hideAllModels();
+      foundTargets.clear();
+      foundTargets.add(anchor);
+      activeAnchorIndex = index;
 
-    const badge = document.getElementById("status-badge");
-    if (badge) {
-      let label = index === 2 ? "Kosakata: Tidur" : `Huruf: ${index === 0 ? 'A' : 'B'}`;
-      badge.textContent = `✅ Terdeteksi — ${label}`;
-      badge.classList.add("status-badge--active");
-    }
+      if (!isMuted) {
+        sfxSuccess.currentTime = 0;
+        sfxSuccess.play().catch(() => {});
+      }
+
+      if (navigator.vibrate) {
+        navigator.vibrate(150);
+      }
+
+      setModelVisible(anchor, true);
+      activeModel = anchor.querySelector(".interactable");
+      hideScanningUI();
+
+      const badge = document.getElementById("status-badge");
+      if (badge) {
+        let label = index === 2 ? "Kosakata: Tidur" : `Huruf: ${index === 0 ? 'A' : 'B'}`;
+        badge.textContent = `✅ Terdeteksi — ${label}`;
+        badge.classList.add("status-badge--active");
+      }
+
+      trackingAnchorIndex = -1;
+      foundValidationTimer = null;
+    }, 300);
   }
 
   function onTargetLost(anchor, index) {
+    if (trackingAnchorIndex === index) {
+      clearTimeout(foundValidationTimer);
+      foundValidationTimer = null;
+      trackingAnchorIndex = -1;
+      return;
+    }
+
     if (activeAnchorIndex !== index) return;
 
     foundTargets.delete(anchor);
