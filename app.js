@@ -9,7 +9,7 @@
   const MODEL_PRESETS = {
     tangan: {
       fitTarget: 0.75,
-      rotation: { x: -90, y: 0, z: 0 },
+      rotation: { x: 0, y: 0, z: -90 },
       liftZ: 0.01,
       offset: { x: 0, y: 0, z: 0 },
       fallbackScale: 1.07,
