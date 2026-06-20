@@ -10,14 +10,14 @@
     tangan: {
       fitTarget: 0.75,
       rotation: { x: -90, y: 0, z: 180 },
-      liftZ: 0.1,
-      offset: { x: 0, y: 0.3, z: 0 },
+      liftZ: 0.02,
+      offset: { x: 0, y: 0, z: 0 },
       fallbackScale: 1.07,
     },
     body: {
-      fitTarget: 1,
+      fitTarget: 1.0,
       rotation: { x: 90, y: 0, z: 0 },
-      liftZ: 0.08,
+      liftZ: 0.02,
       offset: { x: 0, y: 0, z: 0 },
       fallbackScale: 0.095,
     },
@@ -28,12 +28,11 @@
   const PINCH_MIN_RATIO = 0.45;
   const PINCH_MAX_RATIO = 2.2;
 
-  const ROTATION_SENSITIVITY = 0.4;
+  const ROTATION_SENSITIVITY = 0.015;
 
   const modelBaseScales = new Map();
   const modelBasePositions = new Map();
   const modelBaseRotations = new Map();
-  const modelSpinAngles = new Map();
 
   let activeModel = null;
   const foundTargets = new Set();
@@ -356,20 +355,10 @@
       maxDim = nativeMax;
     }
 
-    let centerX = 0, centerY = 0, centerZ = 0;
-    if (!initialBounds.box.isEmpty()) {
-      const c = initialBounds.box.getCenter(new THREE.Vector3());
-      if (isValidNumber(c.x) && isValidNumber(c.y) && isValidNumber(c.z)) {
-        centerX = c.x; centerY = c.y; centerZ = c.z;
-      }
-    }
-
     const fitScale = preset.fitTarget / maxDim;
 
     modelEl.setAttribute("scale", `${fitScale} ${fitScale} ${fitScale}`);
     modelEl.setAttribute("rotation", `${rotation.x} ${rotation.y} ${rotation.z}`);
-
-    mesh.position.set(-centerX, -centerY, -centerZ);
 
     const pos = sanitizePosition({
       x: preset.offset.x,
@@ -383,7 +372,6 @@
     modelBaseRotations.set(modelEl, { ...rotation });
     modelBaseScales.set(modelEl, fitScale);
     modelBasePositions.set(modelEl, { ...pos });
-    modelSpinAngles.set(modelEl, 0);
   }
 
   function applyFallbackScale(modelEl) {
@@ -397,13 +385,11 @@
     modelBaseRotations.set(modelEl, { ...rotation });
     modelBaseScales.set(modelEl, preset.fallbackScale);
     modelBasePositions.set(modelEl, { ...pos });
-    modelSpinAngles.set(modelEl, 0);
   }
 
   function getBaseScale(model) { return modelBaseScales.get(model) ?? getModelPreset(model).fallbackScale; }
   function getBaseRotation(model) { return modelBaseRotations.get(model) ?? getModelRotation(model); }
   function getBasePosition(model) { return modelBasePositions.get(model) ?? { x: 0, y: 0, z: 0 }; }
-  function getSpinAngle(model) { return modelSpinAngles.get(model) ?? 0; }
   function getScaleLimits(model) {
     const base = getBaseScale(model);
     return { min: base * PINCH_MIN_RATIO, max: base * PINCH_MAX_RATIO };
@@ -670,15 +656,24 @@
   function resetActiveModel() {
     if (!activeModel) return;
 
-    modelSpinAngles.set(activeModel, 0);
-
+    const THREE = window.THREE;
     const baseScale = getBaseScale(activeModel);
     const basePos = getBasePosition(activeModel);
     const baseRot = getBaseRotation(activeModel);
 
-    activeModel.setAttribute("rotation", baseRot.x + " " + baseRot.y + " " + baseRot.z);
-    activeModel.setAttribute("position", basePos.x + " " + basePos.y + " " + basePos.z);
-    activeModel.setAttribute("scale", baseScale + " " + baseScale + " " + baseScale);
+    activeModel.setAttribute("position", `${basePos.x} ${basePos.y} ${basePos.z}`);
+    activeModel.setAttribute("scale", `${baseScale} ${baseScale} ${baseScale}`);
+    
+    if (THREE) {
+      activeModel.object3D.quaternion.setFromEuler(
+        new THREE.Euler(
+          baseRot.x * (Math.PI / 180),
+          baseRot.y * (Math.PI / 180),
+          baseRot.z * (Math.PI / 180),
+          'YXZ'
+        )
+      );
+    }
 
     restartAnimation(activeModel);
     applyTimeScale(activeModel, isPlaying ? currentSpeed : 0);
@@ -728,16 +723,17 @@
       const deltaX = touches[0].clientX - lastTouchX;
       lastTouchX = touches[0].clientX;
 
-      const prevSpin = getSpinAngle(activeModel);
-      const newSpin  = prevSpin + deltaX * ROTATION_SENSITIVITY;
-      modelSpinAngles.set(activeModel, newSpin);
+      const THREE = window.THREE;
+      if (THREE) {
+        const deltaAngle = -deltaX * ROTATION_SENSITIVITY;
+        const modelType = activeModel.dataset.modelType;
 
-      const baseRot = getBaseRotation(activeModel);
-      activeModel.setAttribute("rotation", {
-        x: baseRot.x,
-        y: baseRot.y + newSpin,
-        z: baseRot.z,
-      });
+        if (modelType === "tangan") {
+          activeModel.object3D.rotateOnAxis(new THREE.Vector3(0, 0, 1), deltaAngle);
+        } else {
+          activeModel.object3D.rotateOnAxis(new THREE.Vector3(1, 0, 0), deltaAngle);
+        }
+      }
       return;
     }
 
