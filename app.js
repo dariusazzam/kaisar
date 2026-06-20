@@ -9,7 +9,7 @@
   const MODEL_PRESETS = {
     tangan: {
       fitTarget: 0.75,
-      rotation: { x: 90, y: 0, z: 0 },
+      rotation: { x: -90, y: 0, z: 0 },
       liftZ: 0.01,
       offset: { x: 0, y: -0.1, z: 0 },
       fallbackScale: 1.07,
@@ -549,7 +549,7 @@
         badge.classList.remove("status-badge--active");
       }
       lostDebounceTimer = null;
-    }, 1500); 
+    }, 150); 
   }
 
   function setupControlButtons() {
