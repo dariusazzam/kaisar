@@ -9,15 +9,15 @@
   const MODEL_PRESETS = {
     tangan: {
       fitTarget: 0.75,
-      rotation: { x: -90, y: 0, z: 180 },
-      liftZ: 0.02,
+      rotation: { x: -90, y: 0, z: 0 },
+      liftZ: 0.01,
       offset: { x: 0, y: 0, z: 0 },
       fallbackScale: 1.07,
     },
     body: {
       fitTarget: 1.0,
       rotation: { x: 90, y: 0, z: 0 },
-      liftZ: 0.02,
+      liftZ: 0.01,
       offset: { x: 0, y: 0, z: 0 },
       fallbackScale: 0.095,
     },
@@ -28,7 +28,7 @@
   const PINCH_MIN_RATIO = 0.45;
   const PINCH_MAX_RATIO = 2.2;
 
-  const ROTATION_SENSITIVITY = 0.015;
+  const ROTATION_SENSITIVITY = 0.02; // Sensitivitas rotasi berbasis Quaternion
 
   const modelBaseScales = new Map();
   const modelBasePositions = new Map();
@@ -355,10 +355,20 @@
       maxDim = nativeMax;
     }
 
+    let centerX = 0, centerY = 0, centerZ = 0;
+    if (!initialBounds.box.isEmpty()) {
+      const c = initialBounds.box.getCenter(new THREE.Vector3());
+      if (isValidNumber(c.x) && isValidNumber(c.y) && isValidNumber(c.z)) {
+        centerX = c.x; centerY = c.y; centerZ = c.z;
+      }
+    }
+
     const fitScale = preset.fitTarget / maxDim;
 
     modelEl.setAttribute("scale", `${fitScale} ${fitScale} ${fitScale}`);
     modelEl.setAttribute("rotation", `${rotation.x} ${rotation.y} ${rotation.z}`);
+
+    mesh.position.set(-centerX, -centerY, -centerZ);
 
     const pos = sanitizePosition({
       x: preset.offset.x,
