@@ -9,9 +9,9 @@
   const MODEL_PRESETS = {
     tangan: {
       fitTarget: 0.75,
-      rotation: { x: -90, y: 0, z: 0 },
+      rotation: { x: 90, y: 0, z: 0 },
       liftZ: 0.01,
-      offset: { x: 0, y: 0, z: 0 },
+      offset: { x: 0, y: -0.1, z: 0 },
       fallbackScale: 1.07,
     },
     body: {
@@ -531,14 +531,13 @@
 
     if (activeAnchorIndex !== index) return;
 
-    foundTargets.delete(anchor);
-    setModelVisible(anchor, false);
-
     console.info(`[KAISAR] Markah index=${index} terlepas dari kamera`);
 
     if (lostDebounceTimer) clearTimeout(lostDebounceTimer);
     
     lostDebounceTimer = setTimeout(() => {
+      foundTargets.delete(anchor);
+      setModelVisible(anchor, false);
       activeAnchorIndex = -1;
       activeModel = null;
       hideAllModels();
@@ -550,7 +549,7 @@
         badge.classList.remove("status-badge--active");
       }
       lostDebounceTimer = null;
-    }, 250); 
+    }, 1500); 
   }
 
   function setupControlButtons() {
