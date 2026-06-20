@@ -16,7 +16,7 @@
     },
     body: {
       fitTarget: 1,
-      rotation: { x: 90, y: 180, z: 0 },
+      rotation: { x:90, y:180, z:180 },
       liftZ: 0.01,
       offset: { x: 0, y: -0.1, z: 0 },
       fallbackScale: 0.095,
