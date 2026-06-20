@@ -11,7 +11,7 @@
       fitTarget: 0.75,
       rotation: { x: -90, y: 180, z: 0 },
       liftZ: 0.01,
-      offset: { x: 0, y: -0.1, z: 0 },
+      offset: { x: 0, y: 0, z: 0 },
       fallbackScale: 1.07,
     },
     body: {
