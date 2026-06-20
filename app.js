@@ -9,16 +9,16 @@
   const MODEL_PRESETS = {
     tangan: {
       fitTarget: 0.75,
-      rotation: { x: 0, y: 0, z: -90 },
+      rotation: { x: -90, y: 180, z: 0 },
       liftZ: 0.01,
-      offset: { x: 0, y: 0, z: 0 },
+      offset: { x: 0, y: -0.1, z: 0 },
       fallbackScale: 1.07,
     },
     body: {
-      fitTarget: 1.0,
-      rotation: { x: 90, y: 0, z: 0 },
+      fitTarget: 1,
+      rotation: { x: -90, y: 180, z: 0 },
       liftZ: 0.01,
-      offset: { x: 0, y: 0, z: 0 },
+      offset: { x: 0, y: -0.1, z: 0 },
       fallbackScale: 0.095,
     },
   };
@@ -28,11 +28,12 @@
   const PINCH_MIN_RATIO = 0.45;
   const PINCH_MAX_RATIO = 2.2;
 
-  const ROTATION_SENSITIVITY = 0.02; // Sensitivitas rotasi berbasis Quaternion
+  const ROTATION_SENSITIVITY = 0.015;
 
   const modelBaseScales = new Map();
   const modelBasePositions = new Map();
   const modelBaseRotations = new Map();
+  const modelSpinAngles = new Map();
 
   let activeModel = null;
   const foundTargets = new Set();
@@ -382,6 +383,7 @@
     modelBaseRotations.set(modelEl, { ...rotation });
     modelBaseScales.set(modelEl, fitScale);
     modelBasePositions.set(modelEl, { ...pos });
+    modelSpinAngles.set(modelEl, 0);
   }
 
   function applyFallbackScale(modelEl) {
@@ -395,11 +397,13 @@
     modelBaseRotations.set(modelEl, { ...rotation });
     modelBaseScales.set(modelEl, preset.fallbackScale);
     modelBasePositions.set(modelEl, { ...pos });
+    modelSpinAngles.set(modelEl, 0);
   }
 
   function getBaseScale(model) { return modelBaseScales.get(model) ?? getModelPreset(model).fallbackScale; }
   function getBaseRotation(model) { return modelBaseRotations.get(model) ?? getModelRotation(model); }
   function getBasePosition(model) { return modelBasePositions.get(model) ?? { x: 0, y: 0, z: 0 }; }
+  function getSpinAngle(model) { return modelSpinAngles.get(model) ?? 0; }
   function getScaleLimits(model) {
     const base = getBaseScale(model);
     return { min: base * PINCH_MIN_RATIO, max: base * PINCH_MAX_RATIO };
@@ -666,14 +670,16 @@
   function resetActiveModel() {
     if (!activeModel) return;
 
-    const THREE = window.THREE;
+    modelSpinAngles.set(activeModel, 0);
+
     const baseScale = getBaseScale(activeModel);
     const basePos = getBasePosition(activeModel);
     const baseRot = getBaseRotation(activeModel);
 
-    activeModel.setAttribute("position", `${basePos.x} ${basePos.y} ${basePos.z}`);
-    activeModel.setAttribute("scale", `${baseScale} ${baseScale} ${baseScale}`);
-    
+    activeModel.setAttribute("position", basePos.x + " " + basePos.y + " " + basePos.z);
+    activeModel.setAttribute("scale", baseScale + " " + baseScale + " " + baseScale);
+
+    const THREE = window.THREE;
     if (THREE) {
       activeModel.object3D.quaternion.setFromEuler(
         new THREE.Euler(
@@ -736,13 +742,7 @@
       const THREE = window.THREE;
       if (THREE) {
         const deltaAngle = -deltaX * ROTATION_SENSITIVITY;
-        const modelType = activeModel.dataset.modelType;
-
-        if (modelType === "tangan") {
-          activeModel.object3D.rotateOnAxis(new THREE.Vector3(0, 0, 1), deltaAngle);
-        } else {
-          activeModel.object3D.rotateOnAxis(new THREE.Vector3(1, 0, 0), deltaAngle);
-        }
+        activeModel.object3D.rotateOnAxis(new THREE.Vector3(0, 1, 0), deltaAngle);
       }
       return;
     }
