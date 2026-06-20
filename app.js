@@ -9,7 +9,7 @@
   const MODEL_PRESETS = {
     tangan: {
       fitTarget: 0.75,
-      rotation: { x: -90, y: 180, z: 0 },
+      rotation: { x: -90, y: 0, z: 0 },
       liftZ: 0.01,
       offset: { x: 0, y: 0, z: 0 },
       fallbackScale: 1.07,
@@ -446,8 +446,33 @@
   }
 
   function onTargetFound(anchor, index) {
+    if (activeAnchorIndex === index) {
+      if (lostDebounceTimer) {
+        clearTimeout(lostDebounceTimer);
+        lostDebounceTimer = null;
+      }
+      foundTargets.add(anchor);
+      setModelVisible(anchor, true);
+      activeModel = anchor.querySelector(".interactable");
+      hideScanningUI();
+
+      const badge = document.getElementById("status-badge");
+      if (badge) {
+        let label = index === 2 ? "Kosakata: Tidur" : `Huruf: ${index === 0 ? 'A' : 'B'}`;
+        badge.textContent = `✅ Terdeteksi — ${label}`;
+        badge.classList.add("status-badge--active");
+      }
+      return;
+    }
+
     if (activeAnchorIndex !== -1 && activeAnchorIndex !== index) {
-      return; 
+      if (lostDebounceTimer) {
+        clearTimeout(lostDebounceTimer);
+        lostDebounceTimer = null;
+      }
+      hideAllModels();
+      activeAnchorIndex = -1;
+      activeModel = null;
     }
 
     if (trackingAnchorIndex === index) {
