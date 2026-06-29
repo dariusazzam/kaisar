@@ -1,5 +1,5 @@
 /* ============================================================
-   KAISAR — Tema Playful & Ceria
+   KAISAR
    Palet: Kuning #FFD700 · Biru Langit #00AEEF
    ============================================================ */
 
@@ -37,11 +37,11 @@ body {
   font-family: var(--font-main);
   background: #000;
   -webkit-tap-highlight-color: transparent;
-  touch-action: none; /* gesture ditangani di app.js */
+  touch-action: none;
   user-select: none;
 }
 
-/* --- Container AR: video (z:0) + canvas transparan (z:1) --- */
+/* --- Container AR --- */
 .ar-container {
   position: fixed;
   inset: 0;
@@ -50,7 +50,7 @@ body {
   background: #000;
 }
 
-/* Feed kamera — disisipkan MindAR ke #ar-container */
+/* Feed kamera */
 .ar-container video,
 body > video {
   position: absolute !important;
@@ -62,7 +62,7 @@ body > video {
   z-index: 0 !important;
 }
 
-/* Scene AR fullscreen, canvas transparan agar video tembus */
+/* Scene AR fullscreen */
 a-scene {
   position: absolute !important;
   inset: 0;
@@ -146,7 +146,7 @@ a-scene {
 .welcome-modal {
   position: fixed;
   inset: 0;
-  z-index: 15; /* Di bawah loading screen, di atas UI overlay biasa */
+  z-index: 15;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -214,7 +214,7 @@ a-scene {
   margin-bottom: 4px;
 }
 
-/* Tombol Mulai ala Game */
+/* Tombol Mulai */
 .welcome-modal__btn {
   margin-top: 24px;
   width: 100%;
@@ -247,14 +247,14 @@ a-scene {
   position: fixed;
   inset: 0;
   z-index: 10;
-  pointer-events: none; /* gesture tembus ke layar; tombol tetap klik */
+  pointer-events: none;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 /* ============================================================
-   HEADER — gradasi biru ceria + drop shadow teks
+   HEADER
    ============================================================ */
 .app-header {
   position: relative;
@@ -289,12 +289,12 @@ a-scene {
     -2px -2px 0 var(--kaisar-white),  
      2px -2px 0 var(--kaisar-white),
     -2px  2px 0 var(--kaisar-white),
-     2px  2px 0 var(--kaisar-white), /* Stroke putih tebal melingari huruf agar warna-warninya pop-out */
+     2px  2px 0 var(--kaisar-white),
      0px  4px 8px rgba(0, 0, 0, 0.25);
 }
 
 /* ============================================================
-   SCANNING OVERLAY — kotak transparan, border dashed kuning
+   SCANNING OVERLAY
    ============================================================ */
 .scanning-overlay {
   position: absolute;
@@ -376,7 +376,7 @@ a-scene {
 }
 
 /* ============================================================
-   FOOTER CONTROLS — tombol bulat kuning ala game
+   FOOTER CONTROLS
    ============================================================ */
 .footer-controls {
   position: absolute;
@@ -426,7 +426,6 @@ a-scene {
   display: block;
 }
 
-/* Efek tekan (active) — nuansa game interaktif */
 .control-btn:active {
   transform: translateY(4px);
   box-shadow:
@@ -440,7 +439,6 @@ a-scene {
   outline-offset: 3px;
 }
 
-/* Variasi tombol reset sedikit lebih besar */
 .control-btn--reset {
   font-size: 1.75rem;
 }
@@ -478,17 +476,14 @@ a-scene {
   box-shadow: 0 4px 12px rgba(46, 196, 182, 0.4);
 }
 
-/* Variasi ukuran font khusus tombol info */
 .control-btn--info {
   font-size: 1.7rem;
 }
 
-/* Variasi ukuran font khusus tombol mute */
 .control-btn--mute {
   font-size: 1.4rem;
 }
 
-/* Styling teks indikator kecepatan di dalam tombol */
 .control-btn--speed {
   display: flex;
   align-items: center;
@@ -500,7 +495,7 @@ a-scene {
   line-height: 1;
 }
 
-/* Tombol Immersive — kanan atas, tengah vertikal di garis bawah header */
+/* Tombol Immersive */
 .immersive-btn {
   position: absolute;
   right: 12px;
@@ -514,7 +509,7 @@ a-scene {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
   cursor: pointer;
   z-index: 12;
-  pointer-events: auto; /* wajib: parent #ui-overlay punya pointer-events: none */
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -546,14 +541,13 @@ a-scene {
   outline-offset: 2px;
 }
 
-/* Class Utility untuk Menyembunyikan UI secara Halus */
+/* Class Utility */
 .ui-fade-out {
   opacity: 0 !important;
   pointer-events: none !important;
   transition: opacity 0.3s ease !important;
 }
 
-/* Pastikan elemen utama yang mau di-hide punya transisi opacity bawaan */
 .footer-controls, #status-badge, #instruction-text {
   transition: opacity 0.3s ease;
 }
